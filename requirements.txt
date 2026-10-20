@@ -1,0 +1,34 @@
+# GovRule AI - 1주차 최소 의존성
+#
+# 설치:  pip install -r requirements.txt
+# 버전 고정: 설치 후 아래 명령으로 실측 버전을 기록한다.
+#   pip freeze > requirements.lock.txt
+#
+# 라이선스 점검:
+#   pip install pip-licenses
+#   pip-licenses --format=markdown --order=license > LICENSES.md
+#
+# 원칙: MIT / Apache-2.0 / BSD / PSF 계열만 사용.
+#       LGPL 이상 카피레프트는 대체재를 찾는다.
+
+# --- API 서버 ---
+fastapi
+uvicorn[standard]
+pydantic
+python-dotenv
+
+# --- 웹 UI ---
+streamlit
+
+# --- HTTP (법제처 API, Ollama 호출) ---
+requests
+
+# --- 2주차부터 사용 (지금은 주석 유지) ---
+# sentence-transformers      # KURE-v1 임베딩, bge-reranker
+# torch                      # CUDA 빌드는 공식 안내에 따라 별도 설치
+
+# --- 사용하지 않기로 한 것 ---
+# kiwipiepy   LGPL v3   -> BM25 자체 구현으로 대체
+# PyMuPDF     AGPL-3.0  -> 법제처 API가 텍스트 제공
+# lxml                  -> API가 JSON 지원
+# chromadb              -> SQLite 단일화 검토

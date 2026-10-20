@@ -1,0 +1,40 @@
+# ===== 환경 =====
+.venv/
+venv/
+env/
+.env
+.env.local
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# ===== 데이터 (저장소에 올리지 않음) =====
+# 법령 원문은 법제처 저작물이므로 재배포 소지를 피한다.
+# 수집 스크립트만 공개하고 데이터는 각자 수집한다.
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# ===== 모델 가중치 =====
+models/
+*.gguf
+*.safetensors
+*.bin
+
+# ===== 로그 / 산출물 =====
+logs/
+*.log
+outputs/
+reports/
+
+# ===== 에디터 / OS =====
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
