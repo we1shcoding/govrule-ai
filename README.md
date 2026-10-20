@@ -88,12 +88,12 @@ SQLite — 법령 원문 · 메타데이터 · 벡터
 
 | 패키지 | 버전 | 역할 | 라이선스 |
 |---|---|---|---|
-| fastapi | TODO | REST API | MIT |
-| uvicorn | TODO | ASGI 서버 | BSD |
-| streamlit | TODO | 웹 UI | Apache-2.0 |
-| requests | TODO | HTTP 클라이언트 | Apache-2.0 |
-| sentence-transformers | TODO | 임베딩/리랭킹 | Apache-2.0 |
-| pydantic | TODO | 스키마 검증 | MIT |
+| fastapi | 0.150.0 | REST API | MIT |
+| uvicorn | 0.54.0 | ASGI 서버 | BSD |
+| streamlit | 1.66.0 | 웹 UI | Apache-2.0 |
+| requests | 2.34.2 | HTTP 클라이언트 | Apache-2.0 |
+| pydantic | 2.14.1 | 스키마 검증 | MIT |
+| python-dotenv | 1.2.4 | 환경변수 로드 | BSD |
 
 전체 목록은 [`LICENSES.md`](./LICENSES.md) 참조.
 
