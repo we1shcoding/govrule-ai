@@ -1,0 +1,16 @@
+﻿FROM qwen3.5:4b
+
+# 8GB VRAM 한계 — 256K 컨텍스트는 KV 캐시가 넘침
+PARAMETER num_ctx 8192
+
+# 법령 인용은 재현성이 생명. 같은 질문에 같은 답이 나와야 함
+PARAMETER temperature 0.2
+PARAMETER top_p 0.9
+PARAMETER top_k 20
+
+# 기본값 1.5는 법령 문체의 정상적 반복("제O조에 따라")을 깨뜨림
+PARAMETER presence_penalty 0.0
+PARAMETER repeat_penalty 1.05
+
+# thinking은 Modelfile에서 끌 수 없음(unknown parameter).
+# CLI는 /set nothink, API는 요청 JSON의 "think": false 로 제어한다.
