@@ -1,12 +1,9 @@
-﻿"""GovRule AI 백엔드 API."""
-import sys
-from pathlib import Path
-
+"""GovRule AI 백엔드 API."""
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from app.llm.client import chat, health
+from app.config import LLM_MODEL
+from app.llm.client import chat, health, model_available
 
 app = FastAPI(
     title="GovRule AI",
@@ -25,9 +22,15 @@ class ChatResponse(BaseModel):
 
 @app.get("/health")
 def get_health():
-    """Ollama 추론 서버 상태를 확인한다."""
-    ok = health()
-    return {"status": "ok" if ok else "degraded", "ollama": ok}
+    """Ollama 추론 서버와 모델 상태를 확인한다."""
+    server_ok = health()
+    model_ok = model_available() if server_ok else False
+    return {
+        "status": "ok" if (server_ok and model_ok) else "degraded",
+        "ollama": server_ok,
+        "model": LLM_MODEL,
+        "model_available": model_ok,
+    }
 
 
 @app.post("/chat", response_model=ChatResponse)

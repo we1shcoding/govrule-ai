@@ -76,10 +76,12 @@ SQLite — 법령 원문 · 메타데이터 · 벡터
 
 | 역할 | 모델 | 크기 | 라이선스 |
 |---|---|---|---|
-| LLM | `qwen3.5:4b` | 약 3.3GB | Apache-2.0 |
+| LLM | `govrule-4b` (`qwen3.5:4b` 기반) | 약 3.4GB | Apache-2.0 |
 | 임베딩 | `nlpai-lab/KURE-v1` | 1024차원 / 8192토큰 | **MIT** |
 | 리랭커 | `BAAI/bge-reranker-v2-m3` | 약 0.57B | Apache-2.0 |
 | 판정 | (검토 예정) decision model | — | 확인 필요 |
+
+`govrule-4b`는 `qwen3.5:4b`에 컨텍스트 길이·temperature 등을 재설정한 로컬 모델입니다. 파라미터와 근거는 [ADR 0003](./docs/adr/0003-llm-selection.md) 참조.
 
 - 외부 LLM API를 **사용하지 않습니다**
 - Ollama 클라우드 모델(유료)을 **사용하지 않습니다** — 로컬 태그만 사용
@@ -95,7 +97,7 @@ SQLite — 법령 원문 · 메타데이터 · 벡터
 | pydantic | 2.14.1 | 스키마 검증 | MIT |
 | python-dotenv | 1.2.4 | 환경변수 로드 | BSD |
 
-전체 목록은 [`LICENSES.md`](./LICENSES.md) 참조.
+직접 의존성은 MIT / Apache-2.0 / BSD / PSF 계열만 사용합니다. 전이 의존성 중 `certifi`(MPL-2.0)는 정책 범위 밖이지만 비수정 사용이라 의무가 전파되지 않으므로, 예외로 명시하고 유지합니다. 판단 근거는 [ADR 0001](./docs/adr/0001-license-policy.md), 전체 목록은 [`LICENSES.md`](./LICENSES.md) 참조.
 
 ### 사용하지 않기로 한 것
 
@@ -138,7 +140,7 @@ ollama list          # SIZE에 GB가 표시되는지 확인
 ### 2. 환경 구축
 
 ```bash
-git clone https://github.com/<아이디>/govrule-ai.git
+git clone https://github.com/we1shcoding/govrule-ai.git
 cd govrule-ai
 
 python -m venv .venv
@@ -146,28 +148,56 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-### 3. 환경변수
+### 3. 모델 생성
+
+`qwen3.5:4b` 그대로는 쓰지 않습니다. Modelfile로 파라미터를 재설정한 `govrule-4b`를 만들어야 합니다.
+
+```bash
+ollama create govrule-4b -f app/llm/Modelfile.govrule
+ollama list          # govrule-4b 가 보이면 성공
+```
+
+이 단계를 건너뛰면 실행 시 `model not found` 또는 VRAM 초과가 발생합니다.
+
+### 4. 환경변수
 
 `.env.example`을 복사해 `.env` 생성 후 법제처 OC 값 입력.
 
 ```
 LAW_API_OC=your_email_id
+LAW_API_BASE=https://www.law.go.kr/DRF
 OLLAMA_BASE_URL=http://localhost:11434
-LLM_MODEL=qwen3.5:4b
+LLM_MODEL=govrule-4b
 ```
 
-### 4. 실행
+설정이 제대로 읽히는지 확인:
+
+```bash
+python -m app.config         # LLM_MODEL 이 govrule-4b 로 출력되는지
+python -m app.llm.client     # 서버·모델 확인 후 테스트 응답
+```
+
+### 5. 법령 수집
+
+```bash
+python -m app.collect.fetch_law      # data/raw/ 에 JSON 저장
+python -m app.collect.inspect_raw    # 조문 구조 확인 (선택)
+```
+
+### 6. 실행
 
 ```bash
 uvicorn app.api.main:app --reload --port 8000
 streamlit run ui/streamlit_app.py
 ```
 
+두 명령 모두 저장소 루트에서 실행해야 합니다.
+
 ---
 
 ## 평가 지표
 
-> 4주 차 측정 예정. 값은 실측 후 갱신합니다.
+> 2026-11-17 측정 예정. 값은 실측 후 갱신합니다.
 
 | 지표 | 목표 | 측정값 | 측정 방법 |
 |---|---|---|---|
@@ -191,10 +221,11 @@ streamlit run ui/streamlit_app.py
 
 ## 개발 로드맵
 
-- [ ] **1주차** 환경 구축 · 로컬 LLM · 전체 통신 확인
-- [ ] **2주차** 법령 수집 · 조문 파싱 · 색인 · 평가셋 작성
-- [ ] **3주차** 하이브리드 검색 · 리랭커 · 근거성 검증 · UI
-- [ ] **4주차** 성능 측정 · 모델 비교 · 문서화
+- [x] **~10/27** 환경 구축 · 로컬 LLM · 전체 통신 확인 · 법령 수집
+- [ ] **10/28~11/1** 조문 파싱 · SQLite 저장 · 평가셋 작성
+- [ ] **11/2~11/10** 하이브리드 검색 · 리랭커 · 재측정
+- [ ] **11/11~11/16** 근거성 검증 · 출처 표시 UI · Docker 패키징
+- [ ] **11/17~11/20** 성능 측정 · 문서화 · 데모
 
 ---
 
@@ -204,9 +235,9 @@ streamlit run ui/streamlit_app.py
 
 | 번호 | 제목 |
 |---|---|
-| 0001 | 라이선스 정책 — 카피레프트 배제 |
-| 0002 | (예정) 벡터 저장소 선택 |
-| 0003 | (예정) 임베딩 모델 선택 근거 |
+| [0001](./docs/adr/0001-license-policy.md) | 라이선스 정책 — 카피레프트 배제 |
+| [0002](./docs/adr/0002-no-docker-in-dev.md) | 개발 중에는 Docker 를 쓰지 않는다 |
+| [0003](./docs/adr/0003-llm-selection.md) | LLM 선정 및 추론 파라미터 |
 
 ---
 
