@@ -46,7 +46,7 @@ from app.rag import bm25
 sys.stdout.reconfigure(errors="replace")
 
 EVALSET = ROOT / "eval" / "2026-10-27_evalset.json"
-KS = (1, 3, 5, 10, 20)
+KS = (1, 3, 5, 10)
 
 
 # ---------------------------------------------------------------- 검색기
@@ -63,6 +63,12 @@ def make_engine(name: str, **kw):
     if name == "hybrid":
         from app.rag import search
         index = search.load(weight=kw.pop("weight", search.WEIGHT_BM25),
+                            fusion=kw.pop("fusion", "weighted"), **kw)
+        return index.search, index.label()
+    if name == "rerank":
+        from app.rag import rerank, search
+        index = rerank.load(candidates=kw.pop("candidates", rerank.CANDIDATES),
+                            weight=kw.pop("weight", search.WEIGHT_BM25),
                             fusion=kw.pop("fusion", "weighted"), **kw)
         return index.search, index.label()
     raise SystemExit(f"모르는 검색기: {name}")
@@ -235,8 +241,11 @@ def main() -> None:
     p.add_argument("--k", type=int, default=5, help="유형별·놓친 조문 기준 k")
     p.add_argument("--k1", type=float, default=bm25.K1)
     p.add_argument("--b", type=float, default=bm25.B)
-    p.add_argument("--weight", type=float, default=0.5, help="hybrid: BM25 가중치")
+    # 기본값을 박아두면 search.py 의 WEIGHT_BM25 를 조용히 덮어쓴다. None 으로 두고 위임한다.
+    p.add_argument("--weight", type=float, default=None,
+                   help="hybrid/rerank: BM25 가중치 (기본: search.WEIGHT_BM25)")
     p.add_argument("--fusion", default="weighted", choices=["weighted", "rrf"])
+    p.add_argument("--candidates", type=int, default=20, help="rerank: 후보 개수")
     p.add_argument("--scores", action="store_true", help="전 문항 1위 점수 출력")
     p.add_argument("--query-field", default="question",
                    help="question 또는 question_nl")
@@ -250,8 +259,12 @@ def main() -> None:
     items = data["items"]
 
     engine_kw = {"k1": args.k1, "b": args.b}
-    if args.engine == "hybrid":
-        engine_kw |= {"weight": args.weight, "fusion": args.fusion}
+    if args.engine in ("hybrid", "rerank"):
+        from app.rag import search as _search
+        weight = args.weight if args.weight is not None else _search.WEIGHT_BM25
+        engine_kw |= {"weight": weight, "fusion": args.fusion}
+    if args.engine == "rerank":
+        engine_kw |= {"candidates": args.candidates}
     search, label = make_engine(args.engine, **engine_kw)
 
     fields = ["question", "question_nl"] if args.both else [args.query_field]
