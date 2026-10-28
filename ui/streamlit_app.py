@@ -17,7 +17,7 @@ VERDICT = {
 }
 
 st.set_page_config(page_title="GovRule AI", page_icon="⚖️", layout="centered")
-st.title("⚖️ GovRule AI")
+st.title("GovRule AI")
 st.caption("공공기관 계약·구매 법령 검토 — 온프레미스 로컬 추론")
 
 with st.sidebar:
